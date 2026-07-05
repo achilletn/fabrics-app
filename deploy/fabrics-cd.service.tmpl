@@ -1,0 +1,8 @@
+[Unit]
+Description=FabriCS - deploiement continu (git pull + restart si nouveau commit)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash {{WORKDIR}}/deploy/deploy.sh

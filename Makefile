@@ -4,7 +4,7 @@ SERVICE_USER := $(shell whoami)
 APP_DIR := $(shell pwd)
 NODE_MIN_MAJOR := 22
 
-.PHONY: all install check-node deps env seed staff service nginx status logs restart
+.PHONY: all install check-node deps env seed staff service nginx cd-install cd-status cd-logs cd-disable status logs restart
 
 all: service
 
@@ -54,6 +54,28 @@ nginx:
 		exit 1; \
 	fi
 	sudo bash deploy/setup-nginx.sh "$(DOMAIN)" "$(EMAIL)"
+
+cd-install:
+	@if [ ! -d .git ]; then echo "Pas un depot git ici : le CD a besoin de git."; exit 1; fi
+	sed -e "s#{{WORKDIR}}#$(APP_DIR)#g" deploy/fabrics-cd.service.tmpl \
+		| sudo tee /etc/systemd/system/fabrics-cd.service > /dev/null
+	sudo cp deploy/fabrics-cd.timer /etc/systemd/system/fabrics-cd.timer
+	sudo systemctl daemon-reload
+	sudo systemctl enable --now fabrics-cd.timer
+	@echo "CD active : le depot est verifie toutes les 60s (git pull + restart si nouveau commit)."
+	@echo "Suivi : 'make cd-status' / 'make cd-logs'. Desactivation : 'make cd-disable'."
+
+cd-status:
+	systemctl list-timers fabrics-cd.timer --no-pager || true
+	@echo "--- derniere execution du deploiement ---"
+	systemctl status fabrics-cd.service --no-pager || true
+
+cd-logs:
+	sudo journalctl -u fabrics-cd.service -f
+
+cd-disable:
+	sudo systemctl disable --now fabrics-cd.timer
+	@echo "CD desactive (le service continue de tourner sur la version deployee)."
 
 status:
 	sudo systemctl status $(SERVICE_NAME) --no-pager

@@ -45,6 +45,29 @@ connexion admin passe **obligatoirement par HTTPS**.
 Pour une verification en local sur la VM avant `make nginx`, un tunnel SSH :
 `ssh -L 8080:127.0.0.1:<PORT> user@ip-vm`, puis `http://localhost:8080`.
 
+## Deploiement continu (mise a jour auto sur push)
+
+Pour que chaque push sur `main` mette a jour le site tout seul, activer le
+timer systemd de deploiement (une seule fois, sur la VM) :
+
+```bash
+make cd-install
+```
+
+A partir de la, un timer verifie le depot **toutes les 60 s** : des qu'un
+nouveau commit apparait sur la branche suivie (`main`), il fait un
+`git reset --hard` sur `origin/main`, relance `npm ci` **uniquement si les
+dependances ont change**, puis redemarre le service. Sinon il ne fait rien.
+Latence : jusqu'a ~1 min apres le push.
+
+- Aucun secret ni port entrant : la VM tire les changements (elle utilise le
+  token deja en cache cote depot), rien n'est pousse depuis l'exterieur.
+- Le `git reset --hard` ecrase les modifications locales des fichiers
+  **suivis** ; le `.env`, la base `data/` et `public/uploads/` sont ignores
+  par git, donc jamais touches.
+- Suivi : `make cd-status` (prochaine verif + resultat de la derniere) et
+  `make cd-logs`. Desactivation : `make cd-disable`.
+
 ## Installation locale
 
 ```bash

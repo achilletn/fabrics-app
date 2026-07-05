@@ -1,0 +1,10 @@
+[Unit]
+Description=FabriCS - verifie les mises a jour du depot chaque minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=60s
+AccuracySec=15s
+
+[Install]
+WantedBy=timers.target
