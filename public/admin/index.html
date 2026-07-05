@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>Tableau de bord — FabriCS</title>
+<link rel="stylesheet" href="/_astro/actualites.CJeE3WiQ.css">
+</head>
+<body class="min-h-screen flex flex-col bg-paper">
+  <header class="border-b border-line">
+    <div class="max-w-content mx-auto px-6 md:px-10 h-16 flex items-center justify-between">
+      <span class="font-display font-bold text-lg text-ink">FabriCS — Administration</span>
+      <div class="flex items-center gap-4">
+        <span id="whoami" class="text-sm text-smoke"></span>
+        <button id="logout-btn" class="font-display text-sm border border-line px-4 py-2 hover:border-grenade hover:text-grenade transition-colors">
+          Se deconnecter
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow">
+    <div class="max-w-content mx-auto px-6 md:px-10 py-10 grid lg:grid-cols-2 gap-10">
+      <section>
+        <h2 id="form-title" class="font-display text-xl font-bold mb-4 text-ink">Nouvelle actualite</h2>
+        <form id="actu-form" class="flex flex-col gap-4" novalidate>
+          <input type="hidden" id="actu-id" value="">
+          <div>
+            <label for="title" class="block text-sm text-smoke mb-1">Titre</label>
+            <input id="title" name="title" type="text" required maxlength="200" class="w-full border border-line px-3 py-2 text-sm">
+          </div>
+          <div>
+            <label for="excerpt" class="block text-sm text-smoke mb-1">Texte</label>
+            <textarea id="excerpt" name="excerpt" required maxlength="600" rows="4" class="w-full border border-line px-3 py-2 text-sm"></textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="sourceLabel" class="block text-sm text-smoke mb-1">Source (ex: LinkedIn)</label>
+              <input id="sourceLabel" name="sourceLabel" type="text" maxlength="60" class="w-full border border-line px-3 py-2 text-sm">
+            </div>
+            <div>
+              <label for="publishedAt" class="block text-sm text-smoke mb-1">Date de publication</label>
+              <input id="publishedAt" name="publishedAt" type="date" required class="w-full border border-line px-3 py-2 text-sm">
+            </div>
+          </div>
+          <div>
+            <label for="sourceUrl" class="block text-sm text-smoke mb-1">Lien vers la publication (optionnel)</label>
+            <input id="sourceUrl" name="sourceUrl" type="url" maxlength="500" class="w-full border border-line px-3 py-2 text-sm">
+          </div>
+          <div>
+            <label for="image" class="block text-sm text-smoke mb-1">Image (jpg, png ou webp, 5 Mo max)</label>
+            <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" class="w-full text-sm">
+          </div>
+          <p id="form-error" class="text-sm text-grenade hidden" role="alert"></p>
+          <div class="flex gap-3">
+            <button type="submit" class="font-display text-sm px-5 py-2 border border-grenade text-grenade hover:bg-grenade hover:text-paper transition-colors duration-200">
+              Enregistrer
+            </button>
+            <button type="button" id="cancel-edit" class="font-display text-sm px-5 py-2 border border-line hover:border-grenade hover:text-grenade transition-colors duration-200 hidden">
+              Annuler
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section>
+        <h2 class="font-display text-xl font-bold mb-4 text-ink">Actualites publiees</h2>
+        <ul id="actu-list-admin" class="flex flex-col divide-y divide-line border border-line"></ul>
+      </section>
+    </div>
+
+    <div class="max-w-content mx-auto px-6 md:px-10 pb-10">
+      <section>
+        <h2 class="font-display text-xl font-bold mb-4 text-ink">Messages de contact (page Rejoindre)</h2>
+        <ul id="contact-list-admin" class="flex flex-col divide-y divide-line border border-line"></ul>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

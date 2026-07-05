@@ -1,0 +1,169 @@
+# FabriCS — site + backend actualites
+
+Application Node.js/Express qui sert le site FabriCS (fichiers statiques dans
+`public/`) et ajoute une zone d'administration protegee (`/admin`) permettant
+au staff de gerer les actualites, sans toucher au code.
+
+Necessite **Node.js 22.5+** (utilise le module integre `node:sqlite`, pas de
+base de donnees externe a installer ni de compilation native requise pour la
+base de donnees).
+
+## Deploiement rapide sur une VM (Makefile)
+
+Une fois Node.js 22.5+ installe sur la VM (voir "Prerequis systeme" plus bas) :
+
+```bash
+git pull
+make install   # npm ci, genere .env avec des secrets aleatoires, seed les
+               # actualites initiales, cree un compte admin (identifiants
+               # affiches une seule fois dans le terminal)
+make           # installe et demarre un service systemd fabrics-app,
+               # actif au demarrage de la VM
+```
+
+`make install` et `make` sont idempotents : les relancer sur une VM deja
+installee ne recree pas les secrets, les actualites en base ou le compte
+staff existants. Commandes utiles ensuite : `make status`, `make logs`,
+`make restart`.
+
+Le service tourne sous l'utilisateur qui a lance `make` (pas d'utilisateur
+systeme dedie), sans nginx/TLS devant : accessible directement sur
+`http://<ip-vm>:<PORT>`. Pour un vrai nom de domaine en HTTPS, ajouter
+nginx + certbot en suivant la section "Deploiement sur un VPS" ci-dessous.
+
+## Installation locale
+
+```bash
+cd fabrics-app
+npm install
+cp .env.example .env
+# Editer .env : generer SESSION_SECRET et CSRF_SECRET avec :
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+npm run create-staff   # cree le premier compte staff (invite interactive)
+npm run dev             # demarre sur http://127.0.0.1:3000
+```
+
+## Deploiement sur un VPS (Debian/Ubuntu)
+
+### 1. Prerequis systeme
+
+```bash
+sudo apt update && sudo apt install -y nginx
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
+sudo apt install -y nodejs
+sudo apt install -y certbot python3-certbot-nginx ufw
+```
+
+### 2. Utilisateur dedie et code de l'application
+
+```bash
+sudo adduser --system --group --home /opt/fabrics-app fabrics
+sudo -u fabrics git clone <votre-repo> /opt/fabrics-app
+cd /opt/fabrics-app
+sudo -u fabrics npm ci --omit=dev
+sudo -u fabrics cp .env.example .env
+sudo -u fabrics nano .env   # renseigner SESSION_SECRET, CSRF_SECRET, COOKIE_DOMAIN,
+                            # PORT=3000, TRUST_PROXY=true, COOKIE_SECURE=true
+sudo -u fabrics npm run create-staff
+```
+
+### 3. Service systemd
+
+Creer `/etc/systemd/system/fabrics-app.service` :
+
+```ini
+[Unit]
+Description=FabriCS app
+After=network.target
+
+[Service]
+Type=simple
+User=fabrics
+Group=fabrics
+WorkingDirectory=/opt/fabrics-app
+ExecStart=/usr/bin/node src/server.js
+Restart=on-failure
+EnvironmentFile=/opt/fabrics-app/.env
+
+# Durcissement
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/fabrics-app/data /opt/fabrics-app/public/uploads
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now fabrics-app
+sudo systemctl status fabrics-app
+```
+
+### 4. nginx en reverse proxy (TLS)
+
+Creer `/etc/nginx/sites-available/fabrics-app` :
+
+```nginx
+server {
+    listen 80;
+    server_name votre-domaine.fr;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
+
+```bash
+sudo ln -s /etc/nginx/sites-available/fabrics-app /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d votre-domaine.fr   # active HTTPS + redirection auto
+```
+
+Une fois HTTPS actif, verifier dans `.env` : `TRUST_PROXY=true` et
+`COOKIE_SECURE=true`, puis `sudo systemctl restart fabrics-app`.
+
+### 5. Pare-feu
+
+```bash
+sudo ufw allow OpenSSH
+sudo ufw allow 'Nginx Full'
+sudo ufw enable
+```
+
+Node n'ecoute que sur `127.0.0.1` : il n'est jamais expose directement a
+Internet, seul nginx (80/443) l'est.
+
+## Sauvegardes
+
+Sauvegarder regulierement (cron) :
+- `data/app.db` et `data/sessions.db` (base SQLite)
+- `public/uploads/` (images des actualites)
+
+```bash
+0 3 * * * tar -czf /var/backups/fabrics-$(date +\%F).tar.gz -C /opt/fabrics-app data public/uploads
+```
+
+## Ajouter un compte staff supplementaire
+
+```bash
+cd /opt/fabrics-app
+sudo -u fabrics npm run create-staff
+```
+
+Il n'existe volontairement aucun endpoint web d'inscription : la creation
+d'un compte staff necessite un acces shell au serveur.
+
+## Mise a jour des dependances
+
+```bash
+npm audit
+npm outdated
+```

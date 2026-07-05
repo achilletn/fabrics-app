@@ -1,0 +1,21 @@
+[Unit]
+Description=FabriCS app
+After=network.target
+
+[Service]
+Type=simple
+User={{USER}}
+WorkingDirectory={{WORKDIR}}
+# Adjust if node isn't on the unit's default PATH (e.g. installed via nvm).
+ExecStart=/usr/bin/env node src/server.js
+Restart=on-failure
+EnvironmentFile={{WORKDIR}}/.env
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=false
+ReadWritePaths={{WORKDIR}}/data {{WORKDIR}}/public/uploads
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

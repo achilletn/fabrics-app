@@ -1,0 +1,29 @@
+{
+  "name": "fabrics-app",
+  "version": "1.0.0",
+  "description": "Site FabriCS avec backend d'administration des actualites",
+  "private": true,
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "create-staff": "node scripts/create-staff.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "csrf-csrf": "^4.0.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.4.1",
+    "express-session": "^1.18.1",
+    "express-validator": "^7.2.0",
+    "helmet": "^8.0.0",
+    "multer": "^2.2.0",
+    "nodemailer": "^9.0.3",
+    "sharp": "^0.33.5"
+  }
+}
