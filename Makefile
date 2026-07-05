@@ -4,7 +4,7 @@ SERVICE_USER := $(shell whoami)
 APP_DIR := $(shell pwd)
 NODE_MIN_MAJOR := 22
 
-.PHONY: all install check-node deps env seed staff service status logs restart
+.PHONY: all install check-node deps env seed staff service nginx status logs restart
 
 all: service
 
@@ -47,6 +47,13 @@ service:
 	@echo ""
 	@. ./.env 2>/dev/null; echo "Service $(SERVICE_NAME) demarre sur le port $${PORT:-3000}."
 	sudo systemctl status $(SERVICE_NAME) --no-pager
+
+nginx:
+	@if [ -z "$(DOMAIN)" ]; then \
+		echo "Usage : make nginx DOMAIN=ton-domaine.fr [EMAIL=toi@exemple.fr]"; \
+		exit 1; \
+	fi
+	sudo bash deploy/setup-nginx.sh "$(DOMAIN)" "$(EMAIL)"
 
 status:
 	sudo systemctl status $(SERVICE_NAME) --no-pager

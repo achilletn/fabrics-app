@@ -1,0 +1,9 @@
+# Le depot est edite sous Windows mais deploye sur Linux. Ces fichiers DOIVENT
+# garder des fins de ligne LF, sinon ils cassent sur la VM :
+#  - un script bash en CRLF => "bad interpreter: /usr/bin/env bash^M"
+#  - une unite systemd / un .env en CRLF => valeurs parsees avec un \r final
+*.sh          text eol=lf
+*.service     text eol=lf
+*.service.tmpl text eol=lf
+Makefile      text eol=lf
+.env.example  text eol=lf

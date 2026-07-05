@@ -14,28 +14,36 @@ Une fois Node.js 22.5+ installe sur la VM (voir "Prerequis systeme" plus bas) :
 
 ```bash
 git pull
-make install   # npm ci, genere .env avec des secrets aleatoires, seed les
-               # actualites initiales, cree un compte admin (identifiants
-               # affiches une seule fois dans le terminal)
-make           # installe et demarre un service systemd fabrics-app,
-               # actif au demarrage de la VM
+make install                       # npm ci, genere .env avec des secrets
+                                   # aleatoires, seed les actualites initiales,
+                                   # cree un compte admin (identifiants affiches
+                                   # une seule fois dans le terminal)
+make                               # installe et demarre un service systemd
+                                   # fabrics-app, actif au demarrage de la VM
+make nginx DOMAIN=ton-domaine.fr   # nginx + HTTPS (Let's Encrypt) devant l'app,
+                                   # et publie le site sur https://ton-domaine.fr
 ```
 
-`make install` et `make` sont idempotents : les relancer sur une VM deja
-installee ne recree pas les secrets, les actualites en base ou le compte
-staff existants. Commandes utiles ensuite : `make status`, `make logs`,
+Ces trois cibles sont idempotentes : les relancer sur une VM deja installee
+ne recree pas les secrets, les actualites, le compte staff ni le certificat
+existants. Commandes utiles ensuite : `make status`, `make logs`,
 `make restart`.
 
-Le service tourne sous l'utilisateur qui a lance `make` (pas d'utilisateur
-systeme dedie). **Le serveur Node ecoute uniquement sur `127.0.0.1`** : il
-n'est jamais expose directement a Internet. Pour le rendre accessible
-publiquement, placez nginx + certbot devant (voir "Deploiement sur un VPS"
-ci-dessous) afin que la connexion admin passe **obligatoirement par HTTPS** ;
-le login transmet des identifiants et ne doit jamais transiter en clair.
+**Le serveur Node ecoute uniquement sur `127.0.0.1`** : il n'est jamais
+expose directement a Internet. Tant que `make nginx` n'a pas ete lance, le
+site n'est donc PAS joignable via le domaine - c'est normal. `make nginx`
+place nginx + certbot devant, obtient le certificat TLS pour le domaine,
+puis bascule l'app en mode HTTPS (`TRUST_PROXY`/`COOKIE_SECURE`) pour que la
+connexion admin passe **obligatoirement par HTTPS**.
 
-Pour une simple verification depuis votre poste avant de configurer nginx,
-utilisez un tunnel SSH : `ssh -L 8080:127.0.0.1:<PORT> user@ip-vm`, puis
-ouvrez `http://localhost:8080`.
+- Le **domaine** est le seul argument requis (certbot doit savoir pour quel
+  nom demander le certificat ; la VM ne peut pas le deviner). Prerequis : un
+  enregistrement DNS **A** du domaine vers l'IP publique de la VM.
+- Email optionnel mais recommande (avis d'expiration Let's Encrypt) :
+  `make nginx DOMAIN=ton-domaine.fr EMAIL=toi@exemple.fr`.
+
+Pour une verification en local sur la VM avant `make nginx`, un tunnel SSH :
+`ssh -L 8080:127.0.0.1:<PORT> user@ip-vm`, puis `http://localhost:8080`.
 
 ## Installation locale
 
