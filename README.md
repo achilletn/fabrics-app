@@ -27,9 +27,15 @@ staff existants. Commandes utiles ensuite : `make status`, `make logs`,
 `make restart`.
 
 Le service tourne sous l'utilisateur qui a lance `make` (pas d'utilisateur
-systeme dedie), sans nginx/TLS devant : accessible directement sur
-`http://<ip-vm>:<PORT>`. Pour un vrai nom de domaine en HTTPS, ajouter
-nginx + certbot en suivant la section "Deploiement sur un VPS" ci-dessous.
+systeme dedie). **Le serveur Node ecoute uniquement sur `127.0.0.1`** : il
+n'est jamais expose directement a Internet. Pour le rendre accessible
+publiquement, placez nginx + certbot devant (voir "Deploiement sur un VPS"
+ci-dessous) afin que la connexion admin passe **obligatoirement par HTTPS** ;
+le login transmet des identifiants et ne doit jamais transiter en clair.
+
+Pour une simple verification depuis votre poste avant de configurer nginx,
+utilisez un tunnel SSH : `ssh -L 8080:127.0.0.1:<PORT> user@ip-vm`, puis
+ouvrez `http://localhost:8080`.
 
 ## Installation locale
 

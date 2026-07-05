@@ -64,10 +64,17 @@ app.use(
   }),
 );
 
-// Protected admin HTML: checked server-side before falling through to
-// express.static, so an unauthenticated request never receives the
-// dashboard markup, not just a client-side redirect.
-app.get(['/admin', '/admin/', '/admin/index.html'], requireStaff, (req, res) => {
+// Protected admin area: every path under /admin (except the public login
+// page) is checked server-side BEFORE falling through to express.static, so
+// an unauthenticated request never receives the dashboard markup - not just a
+// client-side redirect. Guarding the whole prefix (rather than an explicit
+// list of paths) closes the express.static `extensions: ['html']` bypass
+// where /admin/index would otherwise resolve to admin/index.html unguarded.
+app.use('/admin', (req, res, next) => {
+  if (req.path === '/login.html') return next();
+  return requireStaff(req, res, next);
+});
+app.get(['/admin', '/admin/', '/admin/index.html'], (req, res) => {
   res.sendFile(path.join(publicDir, 'admin', 'index.html'));
 });
 
