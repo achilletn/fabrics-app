@@ -2,12 +2,15 @@ let csrfToken = null;
 let editingId = null;
 
 const form = document.getElementById('actu-form');
+const formCard = document.getElementById('form-card');
 const formTitle = document.getElementById('form-title');
 const formError = document.getElementById('form-error');
 const cancelBtn = document.getElementById('cancel-edit');
 const listEl = document.getElementById('actu-list-admin');
 const contactListEl = document.getElementById('contact-list-admin');
 const whoamiEl = document.getElementById('whoami');
+const actuCountEl = document.getElementById('actu-count');
+const contactCountEl = document.getElementById('contact-count');
 
 function showFormError(message) {
   formError.textContent = message;
@@ -39,38 +42,54 @@ function resetForm() {
   editingId = null;
   form.reset();
   document.getElementById('actu-id').value = '';
-  formTitle.textContent = 'Nouvelle actualite';
+  formTitle.textContent = 'Nouvelle actualité';
+  formCard.classList.remove('is-editing');
   cancelBtn.classList.add('hidden');
   clearFormError();
 }
 
 function buildListItem(item) {
   const li = document.createElement('li');
-  li.className = 'p-4 flex items-start justify-between gap-4';
+  li.className = 'item';
+
+  if (item.image) {
+    const thumb = document.createElement('img');
+    thumb.className = 'thumb';
+    thumb.src = item.image;
+    thumb.alt = '';
+    thumb.loading = 'lazy';
+    li.appendChild(thumb);
+  } else {
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb thumb-empty';
+    thumb.textContent = '—';
+    li.appendChild(thumb);
+  }
 
   const info = document.createElement('div');
+  info.className = 'item-body';
   const title = document.createElement('p');
-  title.className = 'font-display font-bold text-ink';
+  title.className = 'item-title';
   title.textContent = item.title;
   const date = document.createElement('p');
-  date.className = 'text-xs text-smoke mt-1';
+  date.className = 'item-meta';
   date.textContent = new Date(item.publishedAt).toLocaleDateString('fr-FR');
   info.appendChild(title);
   info.appendChild(date);
 
   const actions = document.createElement('div');
-  actions.className = 'flex gap-2 shrink-0';
+  actions.className = 'item-actions';
 
   const editBtn = document.createElement('button');
   editBtn.type = 'button';
   editBtn.textContent = 'Modifier';
-  editBtn.className = 'font-display text-xs border border-line px-3 py-1.5 hover:border-grenade hover:text-grenade transition-colors';
+  editBtn.className = 'btn btn-sm';
   editBtn.addEventListener('click', () => startEdit(item));
 
   const deleteBtn = document.createElement('button');
   deleteBtn.type = 'button';
   deleteBtn.textContent = 'Supprimer';
-  deleteBtn.className = 'font-display text-xs border border-line px-3 py-1.5 hover:border-grenade hover:text-grenade transition-colors';
+  deleteBtn.className = 'btn btn-sm btn-danger';
   deleteBtn.addEventListener('click', () => deleteItem(item));
 
   actions.appendChild(editBtn);
@@ -89,6 +108,14 @@ async function loadList() {
   }
   const data = await res.json();
   listEl.textContent = '';
+  actuCountEl.textContent = data.items.length ? `(${data.items.length})` : '';
+  if (data.items.length === 0) {
+    const empty = document.createElement('li');
+    empty.className = 'empty';
+    empty.textContent = 'Aucune actualité publiée pour le moment.';
+    listEl.appendChild(empty);
+    return;
+  }
   for (const item of data.items) {
     listEl.appendChild(buildListItem(item));
   }
@@ -103,6 +130,7 @@ function startEdit(item) {
   document.getElementById('sourceUrl').value = item.sourceUrl || '';
   document.getElementById('publishedAt').value = item.publishedAt.slice(0, 10);
   formTitle.textContent = `Modifier : ${item.title}`;
+  formCard.classList.add('is-editing');
   cancelBtn.classList.remove('hidden');
   clearFormError();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -125,52 +153,60 @@ async function deleteItem(item) {
 
 function buildContactListItem(item) {
   const li = document.createElement('li');
-  li.className = `p-4 flex items-start justify-between gap-4 ${item.handled ? 'opacity-60' : ''}`;
+  li.className = `item ${item.handled ? 'item-handled' : ''}`;
 
   const info = document.createElement('div');
+  info.className = 'item-body';
 
   const header = document.createElement('div');
-  header.className = 'flex items-center gap-2 flex-wrap text-xs text-smoke font-display tracking-wide mb-1';
+  header.className = 'item-meta-row';
   const date = document.createElement('span');
+  date.className = 'when';
   date.textContent = new Date(item.createdAt).toLocaleString('fr-FR');
   header.appendChild(date);
   if (item.intention) {
     const intention = document.createElement('span');
-    intention.className = 'text-grenade';
+    intention.className = 'badge badge-accent';
     intention.textContent = item.intention;
     header.appendChild(intention);
   }
+  if (item.handled) {
+    const status = document.createElement('span');
+    status.className = 'badge';
+    status.textContent = 'Traité';
+    header.appendChild(status);
+  }
   if (!item.emailSent) {
     const warn = document.createElement('span');
-    warn.className = 'text-grenade';
-    warn.textContent = "email non envoye";
+    warn.className = 'badge badge-warn';
+    warn.textContent = 'Email non envoyé';
     header.appendChild(warn);
   }
   info.appendChild(header);
 
   const nameLine = document.createElement('p');
-  nameLine.className = 'font-display font-bold text-ink';
+  nameLine.className = 'item-title';
   nameLine.textContent = `${item.name} <${item.email}>`;
   info.appendChild(nameLine);
 
   const messageEl = document.createElement('p');
-  messageEl.className = 'text-sm text-smoke mt-1 whitespace-pre-wrap';
+  messageEl.className = 'item-text';
   messageEl.textContent = item.message;
   info.appendChild(messageEl);
 
   const actions = document.createElement('div');
-  actions.className = 'flex gap-2 shrink-0';
+  actions.className = 'item-actions';
 
   const toggleBtn = document.createElement('button');
   toggleBtn.type = 'button';
-  toggleBtn.textContent = item.handled ? 'Marquer a traiter' : 'Marquer traite';
-  toggleBtn.className = 'font-display text-xs border border-line px-3 py-1.5 hover:border-grenade hover:text-grenade transition-colors';
+  toggleBtn.textContent = item.handled ? 'Marquer à traiter' : 'Marquer traité';
+  toggleBtn.className = 'btn btn-sm';
   toggleBtn.addEventListener('click', () => toggleContactHandled(item));
 
   const deleteBtn = document.createElement('button');
   deleteBtn.type = 'button';
   deleteBtn.textContent = 'Supprimer';
-  deleteBtn.className = 'font-display text-xs border border-line px-3 py-1.5 hover:border-grenade hover:text-grenade transition-colors';
+  deleteBtn.className = 'btn btn-sm btn-danger';
   deleteBtn.addEventListener('click', () => deleteContactMessage(item));
 
   actions.appendChild(toggleBtn);
@@ -189,9 +225,11 @@ async function loadContactList() {
   }
   const data = await res.json();
   contactListEl.textContent = '';
+  const pending = data.items.filter((item) => !item.handled).length;
+  contactCountEl.textContent = data.items.length ? `(${pending} à traiter / ${data.items.length})` : '';
   if (data.items.length === 0) {
     const empty = document.createElement('li');
-    empty.className = 'p-4 text-sm text-smoke';
+    empty.className = 'empty';
     empty.textContent = 'Aucun message pour le moment.';
     contactListEl.appendChild(empty);
     return;
