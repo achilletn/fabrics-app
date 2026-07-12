@@ -4,11 +4,11 @@ SERVICE_USER := $(shell whoami)
 APP_DIR := $(shell pwd)
 NODE_MIN_MAJOR := 22
 
-.PHONY: all install check-node deps env seed staff service nginx cd-install cd-status cd-logs cd-disable status logs restart
+.PHONY: all install check-node deps env staff service nginx cd-install cd-status cd-logs cd-disable status logs restart
 
 all: service
 
-install: check-node deps env seed staff
+install: check-node deps env staff
 	@echo "Installation terminee. Lancez 'make' pour demarrer le service."
 
 check-node:
@@ -31,9 +31,6 @@ env: .env
 	sed -i "s/^SESSION_SECRET=.*/SESSION_SECRET=$$SESSION_SECRET/" .env; \
 	sed -i "s/^CSRF_SECRET=.*/CSRF_SECRET=$$CSRF_SECRET/" .env
 	@echo ".env cree avec des secrets generes automatiquement (SMTP a completer manuellement si besoin)."
-
-seed:
-	$(NODE) scripts/seed-actualites.js
 
 staff:
 	$(NODE) scripts/create-admin-auto.js

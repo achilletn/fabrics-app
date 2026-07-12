@@ -15,9 +15,9 @@ Une fois Node.js 22.5+ installe sur la VM (voir "Prerequis systeme" plus bas) :
 ```bash
 git pull
 make install                       # npm ci, genere .env avec des secrets
-                                   # aleatoires, seed les actualites initiales,
-                                   # cree un compte admin (identifiants affiches
-                                   # une seule fois dans le terminal)
+                                   # aleatoires, cree un compte admin
+                                   # (identifiants affiches une seule fois
+                                   # dans le terminal)
 make                               # installe et demarre un service systemd
                                    # fabrics-app, actif au demarrage de la VM
 make nginx DOMAIN=ton-domaine.fr   # nginx + HTTPS (Let's Encrypt) devant l'app,
@@ -25,9 +25,8 @@ make nginx DOMAIN=ton-domaine.fr   # nginx + HTTPS (Let's Encrypt) devant l'app,
 ```
 
 Ces trois cibles sont idempotentes : les relancer sur une VM deja installee
-ne recree pas les secrets, les actualites, le compte staff ni le certificat
-existants. Commandes utiles ensuite : `make status`, `make logs`,
-`make restart`.
+ne recree pas les secrets, le compte staff ni le certificat existants.
+Commandes utiles ensuite : `make status`, `make logs`, `make restart`.
 
 **Le serveur Node ecoute uniquement sur `127.0.0.1`** : il n'est jamais
 expose directement a Internet. Tant que `make nginx` n'a pas ete lance, le
