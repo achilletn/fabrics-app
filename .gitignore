@@ -5,3 +5,5 @@ public/.claude/
 /data
 /public/uploads
 *.log
+dist/
+.DS_Store
