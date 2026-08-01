@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /admin/
+
+Sitemap: https://fabrics.rezo-rm.fr/sitemap.xml
