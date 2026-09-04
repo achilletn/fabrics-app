@@ -34,7 +34,7 @@ app.use(
         connectSrc: ["'self'"],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
-        formAction: ["'self'"],
+        formAction: ["'self'" , "https://formspree.io"],
         frameAncestors: ["'none'"],
         upgradeInsecureRequests: cookieSecure ? [] : null,
       },
